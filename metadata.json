@@ -1,0 +1,7 @@
+{
+  "name": "SignalSense Assistant",
+  "description": "An AI-powered assistant to support aid workers and community leaders in crisis-affected environments using the Signal Band system. It provides training, resources, and real-time conversational support.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
