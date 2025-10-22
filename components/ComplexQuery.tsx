@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { askComplexQuestion } from '../services/gemini';
+import { exportThinkingModeToPdf } from '../utils/exportPdf';
 
 export const ComplexQuery: React.FC = () => {
     const [query, setQuery] = useState('');
@@ -31,6 +32,20 @@ export const ComplexQuery: React.FC = () => {
             <p className="text-sm text-slate-500 mb-4">
                 For complex questions or trend analysis. The assistant will use advanced reasoning to provide a detailed, anonymized response.
             </p>
+            <div className="flex justify-end mb-2">
+                {response && (
+                    <button
+                        onClick={() => exportThinkingModeToPdf(query, response, 'signalsense_thinking_mode')}
+                        className="flex items-center gap-2 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm"
+                        aria-label="Export analysis as PDF"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                        Export
+                    </button>
+                )}
+            </div>
             <form onSubmit={handleSubmit} className="mb-4">
                 <textarea
                     value={query}

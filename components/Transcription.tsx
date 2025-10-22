@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { transcribeAudio } from '../services/gemini';
 import { blobToBase64 } from '../utils/audio';
+import { exportTranscriptionToPdf } from '../utils/exportPdf';
 
 export const Transcription: React.FC = () => {
     const [isRecording, setIsRecording] = useState(false);
@@ -59,6 +60,20 @@ export const Transcription: React.FC = () => {
             <p className="text-sm text-slate-500 mb-4">
                 Record your voice to transcribe notes or log observations. Remember not to include any personally identifiable information.
             </p>
+            <div className="flex justify-end mb-2">
+                {transcribedText && (
+                    <button
+                        onClick={() => exportTranscriptionToPdf(transcribedText, 'signalsense_transcription')}
+                        className="flex items-center gap-2 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm"
+                        aria-label="Export transcription as PDF"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                        Export
+                    </button>
+                )}
+            </div>
             <div className="flex items-center justify-center gap-4 mb-6">
                 <button
                     onClick={isRecording ? stopRecording : startRecording}

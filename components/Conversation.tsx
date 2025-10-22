@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { useLiveSession } from '../hooks/useLiveSession';
+import { exportChatToPdf } from '../utils/exportPdf';
 import type { TranscriptEntry } from '../types';
 
-const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
+const TranscriptBubble = memo(({ entry }: { entry: TranscriptEntry }) => {
     const isUser = entry.speaker === 'user';
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -11,7 +12,7 @@ const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
             </div>
         </div>
     );
-};
+});
 
 export const Conversation: React.FC = () => {
     const { isConnecting, isConnected, transcript, error, startSession, endSession, isMuted, toggleMute } = useLiveSession();
@@ -27,6 +28,20 @@ export const Conversation: React.FC = () => {
             <p className="text-sm text-slate-500 mb-4">
                 Have a real-time conversation with the SignalSense Assistant. Press 'Start' and begin speaking.
             </p>
+            <div className="flex justify-end mb-2">
+                {transcript.length > 0 && (
+                    <button
+                        onClick={() => exportChatToPdf(transcript, 'signalsense_chat')}
+                        className="flex items-center gap-2 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm"
+                        aria-label="Export chat as PDF"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                        Export
+                    </button>
+                )}
+            </div>
             <div className="flex-grow bg-slate-50 rounded-lg p-4 mb-4 overflow-y-auto min-h-[200px] flex flex-col gap-4">
                 {transcript.length === 0 && !isConnected && !isConnecting && (
                     <div className="m-auto text-center text-slate-400">
@@ -63,7 +78,7 @@ export const Conversation: React.FC = () => {
                         </button>
                         <button
                             onClick={toggleMute}
-                            className={`flex items-center justify-center w-12 h-12 rounded-full font-semibold shadow-lg transition-colors duration-200 text-white ${isMuted ? 'bg-slate-500 hover:bg-red-500' : 'bg-slate-500 hover:bg-yellow-500'}`}
+                            className={`flex items-center justify-center w-12 h-12 rounded-full font-semibold shadow-lg transition-colors duration-200 text-white ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'}`}
                             aria-label={isMuted ? "Unmute" : "Mute"}
                         >
                             {isMuted ? (
