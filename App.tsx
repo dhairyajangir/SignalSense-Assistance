@@ -5,6 +5,12 @@ import { Transcription } from './components/Transcription';
 import { ComplexQuery } from './components/ComplexQuery';
 import { Resources } from './components/Resources';
 import type { Tab } from './types';
+import { injectSpeedInsights } from '@vercel/speed-insights';
+import { inject } from '@vercel/analytics';
+
+// Inject Vercel Speed Insights and Analytics
+injectSpeedInsights();
+inject();
 
 const App: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('conversation');
