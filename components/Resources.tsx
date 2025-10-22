@@ -9,12 +9,48 @@ const resources = [
         content: "Find a comfortable position. Close your eyes gently. Inhale slowly through your nose for four counts. Hold your breath for four counts. Exhale slowly through your mouth for six counts. Repeat this for five minutes, focusing only on your breath."
     },
     {
+        title: "Grounding Technique: 5-4-3-2-1",
+        content: "When you feel overwhelmed, try this: Name 5 things you can see around you. Name 4 things you can touch. Name 3 things you can hear. Name 2 things you can smell. Name 1 thing you can taste. This brings you back to the present moment and helps calm your mind."
+    },
+    {
+        title: "Understanding the Signal Band System",
+        content: "The Signal Band System uses colored wristbands to communicate emotional state non-verbally. Green means you are open to interaction or feeling stable. Red means you need space, support, or de-escalation. Respect these signals without judgment. They help restore personal agency in crowded, stressful environments."
+    },
+    {
+        title: "De-escalation Tips for Aid Workers",
+        content: "When someone shows a red band or signs of distress: Approach calmly and non-threateningly. Speak in a low, steady voice. Offer choices, not demands. Give them physical space. Listen without interrupting. Validate their feelings. Ask how you can help. Remember, your calm presence can help them feel safe."
+    },
+    {
         title: "Story of Hope: The Little Seed",
         content: "Once, there was a tiny seed that dreamed of becoming a great tree. It faced harsh winds and cold nights, but it held onto its hope. With a little rain and sunshine, it began to sprout. Slowly, day by day, it grew stronger, reaching for the sky. It reminds us that even in difficult times, with patience and hope, we can grow."
     },
     {
         title: "Activity for Children: Cloud Gazing",
         content: "Find a safe spot to lie down and look at the sky. Watch the clouds as they drift by. What shapes do you see? A dragon? A boat? A fluffy sheep? Let your imagination wander. It's a peaceful way to spend time together."
+    },
+    {
+        title: "Progressive Muscle Relaxation",
+        content: "Sit or lie down comfortably. Starting with your toes, tense the muscles for five seconds, then release. Move up to your calves, thighs, stomach, hands, arms, shoulders, and face. Notice how your body feels lighter and more relaxed with each release. This helps reduce physical tension from stress."
+    },
+    {
+        title: "Creating a Safe Space for Children",
+        content: "Children in crisis need predictability and safety. Establish routines, even simple ones like morning circle time. Create a quiet corner with soft items where they can go when overwhelmed. Use art, play, and storytelling to help them express feelings. Remember, your calm presence is their anchor."
+    },
+    {
+        title: "Self-Care for Caregivers",
+        content: "You cannot pour from an empty cup. Take breaks when possible. Connect with other aid workers for support. Practice the breathing exercises you teach others. Acknowledge your own emotions. Seek supervision or debriefing. Remember, caring for yourself is part of caring for others."
+    },
+    {
+        title: "Building Trust in Crisis Settings",
+        content: "Trust takes time, especially after trauma. Be consistent in your words and actions. Follow through on promises. Respect boundaries and privacy. Listen more than you speak. Show empathy without pity. Small, reliable gestures build safety. Trust is the foundation of all healing."
+    },
+    {
+        title: "Simple Mindfulness for Stressful Moments",
+        content: "Pause. Take three slow breaths. Notice your feet on the ground. Feel the air on your skin. Observe one thing you can see right now without judgment. This brief reset can help you respond rather than react in difficult moments."
+    },
+    {
+        title: "Activity: Gratitude Circle",
+        content: "Gather in a circle. Each person shares one small thing they are grateful for today. It could be a kind word, a meal, the sun, a friend. This simple practice shifts focus to positive moments and builds community connection, even in hardship."
     }
 ];
 
