@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from 'react';
 import { getLiveSession } from '../services/gemini';
 import { encode, decode, decodeAudioData } from '../utils/audio';
@@ -8,6 +7,7 @@ import type { TranscriptEntry } from '../types';
 export const useLiveSession = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
     const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
     const [error, setError] = useState<string | null>(null);
 
@@ -19,6 +19,18 @@ export const useLiveSession = () => {
     const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const outputSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
     
+    const toggleMute = useCallback(() => {
+        setIsMuted(prevMuted => {
+            const newMutedState = !prevMuted;
+            if (streamRef.current) {
+                streamRef.current.getAudioTracks().forEach(track => {
+                    track.enabled = !newMutedState;
+                });
+            }
+            return newMutedState;
+        });
+    }, []);
+
     const nextStartTimeRef = useRef(0);
     const currentInputTranscriptionRef = useRef('');
     const currentOutputTranscriptionRef = useRef('');
@@ -39,6 +51,8 @@ export const useLiveSession = () => {
             streamRef.current = null;
         }
         
+        setIsMuted(false);
+
         if (scriptProcessorRef.current) {
             scriptProcessorRef.current.disconnect();
             scriptProcessorRef.current = null;
@@ -70,6 +84,7 @@ export const useLiveSession = () => {
         setIsConnecting(true);
         setError(null);
         setTranscript([]);
+        setIsMuted(false);
 
         try {
             streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -173,5 +188,5 @@ export const useLiveSession = () => {
     }, [isConnected, isConnecting, endSession]);
 
 
-    return { isConnecting, isConnected, transcript, error, startSession, endSession };
+    return { isConnecting, isConnected, transcript, error, startSession, endSession, isMuted, toggleMute };
 };

@@ -5,12 +5,12 @@ import { Transcription } from './components/Transcription';
 import { ComplexQuery } from './components/ComplexQuery';
 import { Resources } from './components/Resources';
 import type { Tab } from './types';
-import { injectSpeedInsights } from '@vercel/speed-insights';
-import { inject } from '@vercel/analytics';
+// import { injectSpeedInsights } from '@vercel/speed-insights';
+// import { inject } from '@vercel/analytics';
 
-// Inject Vercel Speed Insights and Analytics
-injectSpeedInsights();
-inject();
+// // Inject Vercel Speed Insights and Analytics
+// injectSpeedInsights();
+// inject();
 
 const App: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('conversation');
@@ -61,9 +61,9 @@ const App: React.FC = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="View project on GitHub"
-                            className="text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2"
+                            className="text-black-500 hover:text-black-800 transition-colors flex items-center gap-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-12 w-8" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.867 8.166 6.839 9.489.5.092.682-.217.682-.483 0-.238-.009-.868-.014-1.704-2.782.604-3.369-1.343-3.369-1.343-.454-1.155-1.11-1.464-1.11-1.464-.908-.62.069-.607.069-.607 1.003.07 1.53 1.031 1.53 1.031.892 1.529 2.341 1.087 2.91.832.091-.647.35-1.087.637-1.337-2.22-.252-4.555-1.11-4.555-4.945 0-1.091.39-1.984 1.03-2.682-.103-.253-.447-1.27.098-2.648 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.852.004 1.71.115 2.512.338 1.909-1.295 2.748-1.025 2.748-1.025.547 1.379.203 2.396.1 2.649.64.698 1.03 1.591 1.03 2.682 0 3.846-2.338 4.69-4.566 4.936.36.31.682.924.682 1.863 0 1.344-.012 2.429-.012 2.76 0 .268.18.58.688.482C19.135 20.165 22 16.418 22 12c0-5.523-4.477-10-10-10z" clipRule="evenodd" />
                             </svg>
                             <span className="hidden sm:inline text-sm">GitHub</span>
