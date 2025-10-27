@@ -13,8 +13,10 @@
     "@google/genai": "^1.25.0",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
+    "fonteditor-core": "^2.6.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
+    "otf2ttf": "^1.1.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

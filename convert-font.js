@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Font } from 'fonteditor-core';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -83,8 +84,20 @@ for (const font of fontFiles) {
     continue;
   }
 
-  const fontData = fs.readFileSync(resolvedPath);
-  const base64Font = fontData.toString('base64');
+  let fontBuffer = fs.readFileSync(resolvedPath);
+  const ext = path.extname(resolvedPath).toLowerCase();
+
+  if (ext === '.otf') {
+    try {
+      const font = Font.create(fontBuffer, { type: 'otf' });
+      const ttfBuffer = font.write({ type: 'ttf', hinting: true });
+      fontBuffer = Buffer.from(ttfBuffer);
+    } catch (err) {
+      console.warn(`Failed to convert OTF to TTF for ${resolvedPath}:`, err);
+    }
+  }
+
+  const base64Font = fontBuffer.toString('base64');
   outputContent += `export const ${font.name}Base64 = '${base64Font}';\n`;
 }
 

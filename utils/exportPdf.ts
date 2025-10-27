@@ -40,6 +40,8 @@ const PREFERRED_FONT_NAME = 'NotoSans';
 
 type FontStyle = 'normal' | 'bold' | 'italic';
 
+const registeredFamilies = new Set<string>();
+
 const SCRIPT_FONT_MAP: Array<{ regex: RegExp; font: string }> = [
   { regex: /[\u0900-\u097F]/, font: 'NotoSansDevanagari' }, // Devanagari (Hindi, Marathi, Nepali)
   { regex: /[\u0980-\u09FF]/, font: 'NotoSansBengali' }, // Bengali, Assamese
@@ -58,8 +60,8 @@ const SCRIPT_FONT_MAP: Array<{ regex: RegExp; font: string }> = [
 
 const setFontSafe = (pdf: jsPDF, style: FontStyle = 'normal') => {
   const list = pdf.getFontList() as unknown as Record<string, string[]>;
-  const hasPreferred = !!list && Object.prototype.hasOwnProperty.call(list, PREFERRED_FONT_NAME);
-  const preferredStyles = hasPreferred ? list[PREFERRED_FONT_NAME] : [];
+  const hasPreferred = registeredFamilies.has(PREFERRED_FONT_NAME);
+  const preferredStyles = hasPreferred ? list?.[PREFERRED_FONT_NAME] ?? [] : [];
   const fontName = hasPreferred ? PREFERRED_FONT_NAME : 'helvetica';
   const styles = hasPreferred ? preferredStyles : (list?.helvetica || ['normal', 'bold', 'italic']);
   const finalStyle: FontStyle = styles.includes(style) ? style : 'normal';
@@ -74,7 +76,7 @@ const setFontByText = (pdf: jsPDF, text: string, style: FontStyle = 'normal') =>
   }
 
   const list = pdf.getFontList() as unknown as Record<string, string[]>;
-  const hasFont = (name: string) => !!list && Object.prototype.hasOwnProperty.call(list, name);
+  const hasFont = (name: string) => registeredFamilies.has(name);
 
   for (const { regex, font } of SCRIPT_FONT_MAP) {
     if (regex.test(text) && hasFont(font)) {
@@ -86,7 +88,7 @@ const setFontByText = (pdf: jsPDF, text: string, style: FontStyle = 'normal') =>
   }
 
   if (hasFont(PREFERRED_FONT_NAME)) {
-    const styles = list[PREFERRED_FONT_NAME] || [];
+    const styles = list?.[PREFERRED_FONT_NAME] || [];
     const finalStyle: FontStyle = styles.includes(style) ? style : 'normal';
     pdf.setFont(PREFERRED_FONT_NAME, finalStyle as any);
     return;
@@ -279,6 +281,7 @@ const renderWrappedText = (
  * This avoids repeating the same code in all three export functions.
  */
 const registerFont = (pdf: jsPDF) => {
+  registeredFamilies.clear();
   try {
     const register = (
       fileName: string,
@@ -293,8 +296,10 @@ const registerFont = (pdf: jsPDF) => {
         if (options?.registerBold) {
           pdf.addFont(fileName, familyName, 'bold', 'Identity-H');
         }
+        registeredFamilies.add(familyName);
       } catch (err) {
         console.warn(`Failed to register font ${familyName}`, err);
+        registeredFamilies.delete(familyName);
       }
     };
 
@@ -302,7 +307,7 @@ const registerFont = (pdf: jsPDF) => {
     register('NotoSans-Regular.ttf', 'NotoSans', notoSansLatinBase64, { registerBold: true });
 
     // Japanese
-    register('NotoSansJP-Regular.otf', 'NotoSansJP', notoSansJPBase64);
+  register('NotoSansJP-Regular.ttf', 'NotoSansJP', notoSansJPBase64);
 
     // Indian scripts
     register('NotoSansDevanagari-Regular.ttf', 'NotoSansDevanagari', notoSansDevanagariBase64);
