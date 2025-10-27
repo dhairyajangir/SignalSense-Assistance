@@ -1,4 +1,17 @@
 import jsPDF from 'jspdf';
+import {
+  notoSansLatinBase64,
+  notoSansDevanagariBase64,
+  notoSansJPBase64,
+  notoSansBengaliBase64,
+  notoSansGurmukhiBase64,
+  notoSansGujaratiBase64,
+  notoSansTamilBase64,
+  notoSansTeluguBase64,
+  notoSansKannadaBase64,
+  notoSansMalayalamBase64,
+  notoSansOriyaBase64,
+} from './customFont';
 
 // --- Type Definition ---
 // Added this interface to make the module complete and fix type errors.
@@ -22,10 +35,65 @@ const FOOTER_Y = PAGE_HEIGHT - MARGIN + 9;
 const CONTENT_START_Y_SUBSEQUENT_PAGE = MARGIN + 14; // Y-start for new pages
 const PAGE_BREAK_Y = PAGE_HEIGHT - MARGIN - 12; // Y-pos to trigger page break
 
-// Typography & Colors (limited to built-in jsPDF fonts to avoid bundler issues)
-// Sticking to 'helvetica' as it's the best built-in sans-serif for a clean, modern look.
-const FONT_REGULAR = 'helvetica';
-const FONT_BOLD = 'helvetica';
+// Typography helper: prefer custom font if registered, else fall back to helvetica
+const PREFERRED_FONT_NAME = 'NotoSans';
+
+type FontStyle = 'normal' | 'bold' | 'italic';
+
+const SCRIPT_FONT_MAP: Array<{ regex: RegExp; font: string }> = [
+  { regex: /[\u0900-\u097F]/, font: 'NotoSansDevanagari' }, // Devanagari (Hindi, Marathi, Nepali)
+  { regex: /[\u0980-\u09FF]/, font: 'NotoSansBengali' }, // Bengali, Assamese
+  { regex: /[\u0A00-\u0A7F]/, font: 'NotoSansGurmukhi' }, // Punjabi (Gurmukhi)
+  { regex: /[\u0A80-\u0AFF]/, font: 'NotoSansGujarati' }, // Gujarati
+  { regex: /[\u0B00-\u0B7F]/, font: 'NotoSansOriya' }, // Odia
+  { regex: /[\u0B80-\u0BFF]/, font: 'NotoSansTamil' }, // Tamil
+  { regex: /[\u0C00-\u0C7F]/, font: 'NotoSansTelugu' }, // Telugu
+  { regex: /[\u0C80-\u0CFF]/, font: 'NotoSansKannada' }, // Kannada
+  { regex: /[\u0D00-\u0D7F]/, font: 'NotoSansMalayalam' }, // Malayalam
+  {
+    regex: /[\u3040-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u3400-\u4DBF\u4E00-\u9FFF]/,
+    font: 'NotoSansJP',
+  }, // Japanese (Hiragana, Katakana, Kanji) and shared CJK
+];
+
+const setFontSafe = (pdf: jsPDF, style: FontStyle = 'normal') => {
+  const list = pdf.getFontList() as unknown as Record<string, string[]>;
+  const hasPreferred = !!list && Object.prototype.hasOwnProperty.call(list, PREFERRED_FONT_NAME);
+  const preferredStyles = hasPreferred ? list[PREFERRED_FONT_NAME] : [];
+  const fontName = hasPreferred ? PREFERRED_FONT_NAME : 'helvetica';
+  const styles = hasPreferred ? preferredStyles : (list?.helvetica || ['normal', 'bold', 'italic']);
+  const finalStyle: FontStyle = styles.includes(style) ? style : 'normal';
+  pdf.setFont(fontName, finalStyle as any);
+};
+
+// Choose a font by inspecting the text's script; fall back to safe font if unavailable
+const setFontByText = (pdf: jsPDF, text: string, style: FontStyle = 'normal') => {
+  if (!text) {
+    setFontSafe(pdf, style);
+    return;
+  }
+
+  const list = pdf.getFontList() as unknown as Record<string, string[]>;
+  const hasFont = (name: string) => !!list && Object.prototype.hasOwnProperty.call(list, name);
+
+  for (const { regex, font } of SCRIPT_FONT_MAP) {
+    if (regex.test(text) && hasFont(font)) {
+      const styles = list[font] || [];
+      const finalStyle: FontStyle = styles.includes(style) ? style : 'normal';
+      pdf.setFont(font, finalStyle as any);
+      return;
+    }
+  }
+
+  if (hasFont(PREFERRED_FONT_NAME)) {
+    const styles = list[PREFERRED_FONT_NAME] || [];
+    const finalStyle: FontStyle = styles.includes(style) ? style : 'normal';
+    pdf.setFont(PREFERRED_FONT_NAME, finalStyle as any);
+    return;
+  }
+
+  setFontSafe(pdf, style);
+};
 // const FONT_REGULAR = 'Inter-Regular';
 // const FONT_BOLD = 'Inter-Bold';
 // const FONT_REGULAR = 'SourceSansPro-Regular';
@@ -76,7 +144,7 @@ const addPageFooter = (pdf: jsPDF, pageNumber: number) => {
   pdf.line(MARGIN, FOOTER_LINE_Y, pageWidth - MARGIN, FOOTER_LINE_Y);
 
   // Footer text: muted and italic
-  pdf.setFont(FONT_REGULAR, 'italic');
+  setFontSafe(pdf, 'italic');
   pdf.setFontSize(9);
   pdf.setTextColor(COLOR_MUTED[0], COLOR_MUTED[1], COLOR_MUTED[2]);
 
@@ -92,13 +160,13 @@ const addPageFooter = (pdf: jsPDF, pageNumber: number) => {
 const addPageHeader = (pdf: jsPDF) => {
   let y = MARGIN;
   // Main Title: "SignalSense Assistant"
-  pdf.setFont(FONT_BOLD, 'bold');
+  setFontSafe(pdf, 'bold');
   pdf.setFontSize(16); // per design: Header 16 bold
   pdf.setTextColor(COLOR_HEADER[0], COLOR_HEADER[1], COLOR_HEADER[2]);
   pdf.text('SignalSense Assistant', MARGIN, y);
 
   // Export Stamp (top right)
-  pdf.setFont(FONT_REGULAR, 'normal');
+  setFontSafe(pdf, 'normal');
   pdf.setFontSize(10); // per design: timestamp 10 regular
   pdf.setTextColor(COLOR_MUTED[0], COLOR_MUTED[1], COLOR_MUTED[2]);
   const exportedStamp = new Intl.DateTimeFormat('en-US', {
@@ -141,7 +209,7 @@ const addTitleBlock = (pdf: jsPDF, title: string): number => {
   let y = MARGIN + 7; // Start below header text
 
   // Subtitle (e.g., "Chat Transcript")
-  pdf.setFont(FONT_REGULAR, 'normal');
+  setFontSafe(pdf, 'normal');
   pdf.setFontSize(13);
   pdf.setTextColor(COLOR_BODY[0], COLOR_BODY[1], COLOR_BODY[2]);
   pdf.text(title, MARGIN, y);
@@ -203,9 +271,61 @@ const renderWrappedText = (
   return [y, pageNumber];
 };
 
+// --- Helper: Render wrapped text with simple bullet & paragraph handling ---
+// ... (no changes needed)
+
+/**
+ * 2. Create a helper function to add the font to a new PDF instance.
+ * This avoids repeating the same code in all three export functions.
+ */
+const registerFont = (pdf: jsPDF) => {
+  try {
+    const register = (
+      fileName: string,
+      familyName: string,
+      base64: string,
+      options?: { registerBold?: boolean },
+    ) => {
+      if (!base64) return;
+      try {
+        pdf.addFileToVFS(fileName, base64);
+        pdf.addFont(fileName, familyName, 'normal', 'Identity-H');
+        if (options?.registerBold) {
+          pdf.addFont(fileName, familyName, 'bold', 'Identity-H');
+        }
+      } catch (err) {
+        console.warn(`Failed to register font ${familyName}`, err);
+      }
+    };
+
+    // Base Latin (covers Latin, Cyrillic, Greek, Vietnamese, etc.)
+    register('NotoSans-Regular.ttf', 'NotoSans', notoSansLatinBase64, { registerBold: true });
+
+    // Japanese
+    register('NotoSansJP-Regular.otf', 'NotoSansJP', notoSansJPBase64);
+
+    // Indian scripts
+    register('NotoSansDevanagari-Regular.ttf', 'NotoSansDevanagari', notoSansDevanagariBase64);
+    register('NotoSansBengali-Regular.ttf', 'NotoSansBengali', notoSansBengaliBase64);
+    register('NotoSansGurmukhi-Regular.ttf', 'NotoSansGurmukhi', notoSansGurmukhiBase64);
+    register('NotoSansGujarati-Regular.ttf', 'NotoSansGujarati', notoSansGujaratiBase64);
+    register('NotoSansTamil-Regular.ttf', 'NotoSansTamil', notoSansTamilBase64);
+    register('NotoSansTelugu-Regular.ttf', 'NotoSansTelugu', notoSansTeluguBase64);
+    register('NotoSansKannada-Regular.ttf', 'NotoSansKannada', notoSansKannadaBase64);
+    register('NotoSansMalayalam-Regular.ttf', 'NotoSansMalayalam', notoSansMalayalamBase64);
+    register('NotoSansOriya-Regular.ttf', 'NotoSansOriya', notoSansOriyaBase64);
+  } catch (e) {
+    console.error('Failed to register font:', e);
+    // Fallback to helvetica if something goes wrong
+    setFontSafe(pdf, 'normal');
+  }
+};
+
 // --- Export: Chat Transcript ---
 export const exportChatToPdf = (transcript: TranscriptEntry[], filename = 'chat_export') => {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  registerFont(pdf); // <-- 4. Call the register function
+
   let pageNumber = 1;
   let y = addTitleBlock(pdf, 'Chat Transcript');
   addPageFooter(pdf, pageNumber); // Add footer to the first page
@@ -230,8 +350,8 @@ export const exportChatToPdf = (transcript: TranscriptEntry[], filename = 'chat_
   const bubbleTextColor = isUser ? COLOR_BODY : COLOR_ASSISTANT_TEXT;
   // --- End Modification ---
 
-    // Set font *before* splitting text to ensure accurate line splitting
-    pdf.setFont(FONT_REGULAR, 'normal');
+  // Set font by detected script before splitting to ensure accurate measurements
+  setFontByText(pdf, entry.text, 'normal');
     pdf.setFontSize(10);
     const textLines = pdf.splitTextToSize(entry.text, bubbleMaxWidth - bubblePaddingX * 2);
 
@@ -258,7 +378,7 @@ export const exportChatToPdf = (transcript: TranscriptEntry[], filename = 'chat_
     [y, pageNumber] = ensureSpace(pdf, y, requiredHeight, pageNumber);
     
     // --- Speaker label ---
-    pdf.setFont(FONT_BOLD, 'bold');
+  setFontSafe(pdf, 'bold');
     pdf.setFontSize(10.5); // per design: speaker label 10.5 semibold
     pdf.setTextColor(speakerLabelColor[0], speakerLabelColor[1], speakerLabelColor[2]);
     const speakerWidth = (pdf.getStringUnitWidth(speaker) * pdf.getFontSize()) / pdf.internal.scaleFactor;
@@ -274,8 +394,8 @@ export const exportChatToPdf = (transcript: TranscriptEntry[], filename = 'chat_
     pdf.roundedRect(bubbleX, y, bubbleWidth, bubbleHeight, bubbleRadius, bubbleRadius, 'FD');
 
     // --- Message text ---
-    // Reset to regular font explicitly to avoid 'sticking' bold from the label
-    pdf.setFont(FONT_REGULAR, 'normal');
+  // Reset to regular font (match script of this message)
+  setFontByText(pdf, entry.text, 'normal');
     pdf.setFontSize(10); // per design: message text size 10 regular
     pdf.setTextColor(bubbleTextColor[0], bubbleTextColor[1], bubbleTextColor[2]);
     let textY = y + bubblePaddingY + 3; // +3 for font baseline
@@ -293,12 +413,14 @@ export const exportChatToPdf = (transcript: TranscriptEntry[], filename = 'chat_
 // --- Export: Transcription ---
 export const exportTranscriptionToPdf = (text: string, filename = 'transcription_export') => {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  registerFont(pdf); // <-- 4. Call the register function
+
   let pageNumber = 1;
   let y = addTitleBlock(pdf, 'Transcription');
   addPageFooter(pdf, pageNumber); // Add footer to the first page
   const textLineHeight = 7; // Slightly more spacing for a text document
 
-  pdf.setFont(FONT_REGULAR, 'normal');
+  setFontByText(pdf, text, 'normal');
   pdf.setFontSize(10.5);
   pdf.setTextColor(COLOR_BODY[0], COLOR_BODY[1], COLOR_BODY[2]);
 
@@ -316,6 +438,8 @@ export const exportTranscriptionToPdf = (text: string, filename = 'transcription
 // --- Export: Thinking Mode (Complex Query) ---
 export const exportThinkingModeToPdf = (query: string, response: string, filename = 'thinking_mode_export') => {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  registerFont(pdf); // <-- 4. Call the register function
+
   let pageNumber = 1;
   let y = addTitleBlock(pdf, 'Thinking Mode Analysis');
   addPageFooter(pdf, pageNumber); // Add footer to the first page
@@ -325,13 +449,13 @@ export const exportThinkingModeToPdf = (query: string, response: string, filenam
 
   // --- Query Section ---
   [y, pageNumber] = ensureSpace(pdf, y, textLineHeight * 1.5, pageNumber); // Ensure space for title
-  pdf.setFont(FONT_BOLD, 'bold');
+  setFontSafe(pdf, 'bold');
   pdf.setFontSize(13);
   pdf.setTextColor(COLOR_PRIMARY[0], COLOR_PRIMARY[1], COLOR_PRIMARY[2]);
   pdf.text('Your Query:', MARGIN, y);
   y += textLineHeight * 1.5;
 
-  pdf.setFont(FONT_REGULAR, 'normal');
+  setFontByText(pdf, query, 'normal');
   pdf.setFontSize(10.5);
   // Render query inside a highlighted box
   const queryLines = pdf.splitTextToSize(query, USABLE_WIDTH - blockPadding * 2);
@@ -340,7 +464,7 @@ export const exportThinkingModeToPdf = (query: string, response: string, filenam
   pdf.setFillColor(COLOR_PRIMARY_LIGHT[0], COLOR_PRIMARY_LIGHT[1], COLOR_PRIMARY_LIGHT[2]);
   pdf.setDrawColor(COLOR_LINE[0], COLOR_LINE[1], COLOR_LINE[2]);
   pdf.roundedRect(MARGIN, y, USABLE_WIDTH, queryBlockHeight, 3, 3, 'FD');
-  pdf.setFont(FONT_REGULAR, 'normal');
+  setFontByText(pdf, query, 'normal');
   pdf.setFontSize(10.5);
   pdf.setTextColor(COLOR_BODY[0], COLOR_BODY[1], COLOR_BODY[2]);
   let innerY = y + blockPadding + 4;
@@ -350,13 +474,13 @@ export const exportThinkingModeToPdf = (query: string, response: string, filenam
   // --- Response Section ---
   [y, pageNumber] = ensureSpace(pdf, y, textLineHeight * 1.5, pageNumber);
   
-  pdf.setFont(FONT_BOLD, 'bold');
+  setFontSafe(pdf, 'bold');
   pdf.setFontSize(13);
   pdf.setTextColor(COLOR_ASSISTANT[0], COLOR_ASSISTANT[1], COLOR_ASSISTANT[2]);
   pdf.text('Analysis Response:', MARGIN, y);
   y += textLineHeight * 1.5;
 
-  pdf.setFont(FONT_REGULAR, 'normal');
+  setFontByText(pdf, response, 'normal');
   pdf.setFontSize(10.5);
   pdf.setTextColor(COLOR_BODY[0], COLOR_BODY[1], COLOR_BODY[2]);
   // Use renderWrappedText so bullets and paragraphs are respected
