@@ -13,6 +13,8 @@ export const useLiveSession = () => {
 
     const sessionRef = useRef<LiveSession | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
+    // Audio feedback for mute/unmute button
+    const clickAudioRef = useRef<HTMLAudioElement | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -20,6 +22,18 @@ export const useLiveSession = () => {
     const outputSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
     
     const toggleMute = useCallback(() => {
+        // Create audio element lazily. Using Vite base URL so asset path works in dev & production.
+        if (!clickAudioRef.current) {
+            try {
+                // import.meta.env.BASE_URL is provided by Vite; cast to any to avoid TypeScript ImportMeta typing issues
+                clickAudioRef.current = new Audio(`${(import.meta as any).env?.BASE_URL ?? '/'}assets/sounds/mute-unmute.mp3`);
+            } catch (e) {
+                // Fallback: try relative path (best-effort)
+                try { clickAudioRef.current = new Audio('/assets/sounds/mute-unmute.mp3'); } catch {}
+            }
+        }
+
+        // Toggle the microphone tracks immediately
         setIsMuted(prevMuted => {
             const newMutedState = !prevMuted;
             if (streamRef.current) {
@@ -27,6 +41,20 @@ export const useLiveSession = () => {
                     track.enabled = !newMutedState;
                 });
             }
+
+            // Play the click sound as a user-driven action — browsers will allow playback on click
+            try {
+                if (clickAudioRef.current) {
+                    clickAudioRef.current.currentTime = 0;
+                    // ignore promise rejection (some browsers may still block under strict policies)
+                    void clickAudioRef.current.play();
+                }
+            } catch (err) {
+                // Non-fatal: just log and continue
+                // eslint-disable-next-line no-console
+                console.warn('Could not play mute/unmute sound', err);
+            }
+
             return newMutedState;
         });
     }, []);

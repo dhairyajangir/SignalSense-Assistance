@@ -17,6 +17,29 @@ const TranscriptBubble = memo(({ entry }: { entry: TranscriptEntry }) => {
 export const Conversation: React.FC = () => {
     const { isConnecting, isConnected, transcript, error, startSession, endSession, isMuted, toggleMute } = useLiveSession();
     const transcriptEndRef = useRef<HTMLDivElement>(null);
+    const startAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    const handleStartClick = () => {
+        // lazy init audio (works in dev & production with Vite)
+        if (!startAudioRef.current) {
+            try {
+                startAudioRef.current = new Audio(`${(import.meta as any).env.BASE_URL}assets/sounds/start-stop.mp3`);
+            } catch (e) {
+                try { startAudioRef.current = new Audio('/assets/sounds/start-stop.mp3'); } catch {}
+            }
+        }
+
+        try {
+            if (startAudioRef.current) {
+                startAudioRef.current.currentTime = 0;
+                void startAudioRef.current.play();
+            }
+        } catch (err) {
+            console.warn('Could not play start sound', err);
+        }
+
+        startSession();
+    };
 
     useEffect(() => {
         transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,7 +80,7 @@ export const Conversation: React.FC = () => {
             <div className="flex items-center justify-center gap-4">
                 {!isConnected ? (
                     <button
-                        onClick={startSession}
+                        onClick={handleStartClick}
                         disabled={isConnecting}
                         className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full font-semibold shadow-lg hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-200"
                     >

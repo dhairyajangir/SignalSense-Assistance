@@ -12,6 +12,7 @@ export const Transcription: React.FC = () => {
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+    const transcribeAudioRef = useRef<HTMLAudioElement | null>(null);
 
     const startRecording = useCallback(async () => {
         setError(null);
@@ -39,7 +40,7 @@ export const Transcription: React.FC = () => {
 
                 stream.getTracks().forEach(track => track.stop());
             };
-            mediaRecorderRef.current.start();
+                mediaRecorderRef.current.start();
             setIsRecording(true);
         } catch (err) {
             console.error("Error starting recording:", err);
@@ -53,6 +54,27 @@ export const Transcription: React.FC = () => {
             setIsRecording(false);
         }
     }, [isRecording]);
+
+    const handleRecordClick = () => {
+        if (!transcribeAudioRef.current) {
+            try {
+                transcribeAudioRef.current = new Audio(`${(import.meta as any).env.BASE_URL}assets/sounds/transcribe.mp3`);
+            } catch (e) {
+                try { transcribeAudioRef.current = new Audio('/assets/sounds/transcribe.mp3'); } catch {}
+            }
+        }
+
+        try {
+            if (transcribeAudioRef.current) {
+                transcribeAudioRef.current.currentTime = 0;
+                void transcribeAudioRef.current.play();
+            }
+        } catch (err) {
+            console.warn('Could not play transcribe sound', err);
+        }
+
+        if (isRecording) stopRecording(); else startRecording();
+    };
 
     return (
         <div className="flex flex-col h-full">
@@ -76,7 +98,7 @@ export const Transcription: React.FC = () => {
             </div>
             <div className="flex items-center justify-center gap-4 mb-6">
                 <button
-                    onClick={isRecording ? stopRecording : startRecording}
+                    onClick={handleRecordClick}
                     className={`flex items-center justify-center w-20 h-20 rounded-full text-white font-semibold shadow-lg transition-colors duration-200 ${
                         isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-sky-500 hover:bg-sky-600'
                     }`}
